@@ -6,27 +6,27 @@ on:
       LIBRARY_NAME:
         description: 'LIBRARY_NAME'
         required: true
-        default: 'SHRP'
+        default: 'aosp'
       LIBRARY_URL:
         description: 'LIBRARY_URL'
         required: true
-        default: 'https://github.com/SHRP/manifest.git'
+        default: 'https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git'
       LIBRARY_BRANCH:
-        description: 'LIBRARY_BRANCH'
+        description: 'DEVICE_BRANCH'
         required: true
-        default: 'shrp-12.1'
+        default: 'twrp-12.1'
       DEVICE_URL:
         description: 'DEVICE_URL'
         required: true
-        default: 'https://github.com/sam9306/shrp_device_xiaomi_nabu'
+        default: 'https://github.com/sam9306/platform_manifest_twrp_aosp'
       DEVICE_BRANCH:
         description: 'DEVICE_BRANCH'
         required: true
-        default: 'twrp_12.1'
+        default: 'twrp-12.1' 
       DEVICE_PATH:
         description: 'DEVICE_PATH'
         required: true
-        default: 'device/xiaomi/nabu'
+        default: 'device/xiaomi/nabu
       DEVICE_NAME:
         description: 'DEVICE_NAME'
         required: true
@@ -34,12 +34,6 @@ on:
 
 jobs:
   build:
-    if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-18.04
-    
-    steps:
-    - name: Check Out
-      uses: actions/checkout@main
       
     - name: Prepare the environment
       run: |
@@ -60,59 +54,31 @@ jobs:
       
     - name: Install repo
       run: |
-        mkdir ~/bin
-        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-        chmod a+x ~/bin/repo
-        export PATH=~/bin:$PATH
-      
-    - name: Initialize repo
-      run: |
-        PATH=~/bin:$PATH
-        mkdir workspace
-        cd workspace
-        echo "::set-output name=pwd::$(pwd)"
-        git config --global user.name "sam9306's Action-Build-Bot"
-        git config --global user.email "sam93062180@gmail.com"
-        repo init --depth=1 -u ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }}
-      id: pwd
-          
-    - name: Repo Sync
-      run: |
-        PATH=~/bin:$PATH
-        cd workspace
-        repo sync -j$(nproc --all) -f --force-sync
-        ls -al
-      
-    - name: Clone device
-      run: |
-        PATH=~/bin:$PATH
-        cd ${{ steps.pwd.outputs.pwd }}
         git clone ${{ github.event.inputs.DEVICE_URL }} -b ${{ github.event.inputs.DEVICE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
 
     - name: Building
       run: |
         PATH=~/bin:$PATH
-        cd ${{ steps.pwd.outputs.pwd }}
+        cd ${{ steps.s93062180.outputs.s93062180 }}
         export ALLOW_MISSING_DEPENDENCIES=true
         source build/envsetup.sh
-        lunch ${{ github.event.inputs.LIBRARY_NAME }}_${{ github.event.inputs.DEVICE_NAME }}-eng 
+        lunch ${{ github.event.inputs.aosp }}_${{ github.event.inputs.aosp }}-eng 
         make clean
-        make bootimage -j$(nproc --all)        
-        adbd bootimage
-        
+        mka adbd bootimage -j$(nproc --all)        
+    
     - name: Compressed file
       run: |
         PATH=~/bin:$PATH
         cd workspace
-        zip -r ./${{ github.event.inputs.DEVICE_NAME }}-Built.zip ./out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*
+        zip -r ./${{ github.event.inputs.nabu }}-Built.zip ./out/target/product/${{ github.event.inputs.nabu }}/*
 
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
-        files: workspace/${{ github.event.inputs.DEVICE_NAME }}-Built.zip
-        name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
-        tag_name: ${{ github.run_id }}
-        body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
+        files: workspace/${{ github.event.inputs.nabu }}-Built.zip
+        name: ${{ github.event.inputs.nabu }}-${{ github.run_sam9306 }}
+        tag_name: ${{ github.run_sam9306 }}
+        body: Boot for ${{ github.event.inputs.nabu }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
